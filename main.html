@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Bestie App 💕</title>
+  <style>
+    :root {
+      --bg: #fff0f5;
+      --text: #333;
+      --box: #ffe4f2;
+      --accent: #ff69b4;
+    }
+
+    body.dark {
+      --bg: #1e1e1e;
+      --text: #f8f8f8;
+      --box: #333;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 20px;
+    }
+
+    h1, h2 {
+      color: var(--accent);
+      text-align: center;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+    }
+
+    .box {
+      background: var(--box);
+      padding: 20px;
+      border-radius: 10px;
+      margin: 20px 0;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background: var(--accent);
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      margin-top: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .memory img {
+      max-width: 100%;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+
+    .theme-toggle {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+    }
+
+    ul {
+      padding-left: 20px;
+    }
+
+    li {
+      margin: 5px 0;
+    }
+
+    .quote {
+      font-style: italic;
+      text-align: center;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body onload="initApp()">
+  <div class="theme-toggle">
+    <button onclick="toggleTheme()">🌓</button>
+  </div>
+
+  <div class="container">
+    <h1>Bestie App 💕</h1>
+
+    <div class="box">
+      <h2>💖 Nicknames</h2>
+      <input type="text" id="nickname1" placeholder="Your nickname">
+      <input type="text" id="nickname2" placeholder="Bestie's nickname">
+      <button onclick="saveNicknames()">Save</button>
+      <p>Hey <span id="name1">you</span> & <span id="name2">bestie</span> 💕</p>
+    </div>
+
+    <div class="box">
+      <h2>📸 Memory Vault</h2>
+      <input type="text" id="memoryTitle" placeholder="Memory Title">
+      <textarea id="memoryDesc" placeholder="What happened?"></textarea>
+      <input type="text" id="memoryImg" placeholder="Image URL (optional)">
+      <button onclick="saveMemory()">Add Memory</button>
+      <div id="memoryList"></div>
+    </div>
+
+    <div class="box">
+      <h2>🎉 Friendiversary Countdown</h2>
+      <input type="date" id="friendDate">
+      <button onclick="saveDate()">Save Date</button>
+      <p id="daysTogether">💫 You’ve been besties for ___ days!</p>
+    </div>
+
+    <div class="box">
+      <h2>📨 Time Capsule</h2>
+      <textarea id="capsuleMsg" placeholder="Write a message for the future"></textarea>
+      <input type="date" id="capsuleDate">
+      <button onclick="saveCapsule()">Save Capsule</button>
+      <div id="capsuleResult"></div>
+    </div>
+
+    <div class="box">
+      <h2>💬 Compliment Generator</h2>
+      <button onclick="randomCompliment()">Give Compliment</button>
+      <p id="complimentText">✨ You’re magical, bestie!</p>
+    </div>
+
+    <div class="box">
+      <h2>🌈 Shared Bucket List</h2>
+      <input type="text" id="bucketItem" placeholder="Add something fun!">
+      <button onclick="addBucket()">Add</button>
+      <ul id="bucketList"></ul>
+    </div>
+
+    <div class="box">
+      <h2>🌟 Quote of the Day</h2>
+      <p class="quote" id="dailyQuote"></p>
+    </div>
+  </div>
+
+  <script>
+    function initApp() {
+      document.body.classList.toggle('dark', localStorage.getItem("theme") === "dark");
+      document.getElementById("name1").innerText = localStorage.getItem("nick1") || "you";
+      document.getElementById("name2").innerText = localStorage.getItem("nick2") || "bestie";
+      loadMemories();
+      updateFriendiversary();
+      showCapsule();
+      loadBucket();
+      dailyQuote();
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
+      localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+    }
+
+    function saveNicknames() {
+      const nick1 = document.getElementById("nickname1").value;
+      const nick2 = document.getElementById("nickname2").value;
+      localStorage.setItem("nick1", nick1);
+      localStorage.setItem("nick2", nick2);
+      document.getElementById("name1").innerText = nick1;
+      document.getElementById("name2").innerText = nick2;
+    }
+
+    function saveMemory() {
+      const title = document.getElementById("memoryTitle").value;
+      const desc = document.getElementById("memoryDesc").value;
+      const img = document.getElementById("memoryImg").value;
+      const memories = JSON.parse(localStorage.getItem("memories") || "[]");
+      memories.unshift({ title, desc, img });
+      localStorage.setItem("memories", JSON.stringify(memories));
+      loadMemories();
+    }
+
+    function loadMemories() {
+      const memories = JSON.parse(localStorage.getItem("memories") || "[]");
+      document.getElementById("memoryList").innerHTML = memories.map(m => `
+        <div class="memory box">
+          <h3>${m.title}</h3>
+          <p>${m.desc}</p>
+          ${m.img ? `<img src="${m.img}" alt="Memory photo" />` : ''}
+        </div>
+      `).join('');
+    }
+
+    function saveDate() {
+      const date = document.getElementById("friendDate").value;
+      localStorage.setItem("friendDate", date);
+      updateFriendiversary();
+    }
+
+    function updateFriendiversary() {
+      const saved = localStorage.getItem("friendDate");
+      if (saved) {
+        const then = new Date(saved);
+        const now = new Date();
+        const days = Math.floor((now - then) / (1000 * 60 * 60 * 24));
+        document.getElementById("daysTogether").innerText = `💫 You’ve been besties for ${days} days!`;
+      }
+    }
+
+    function saveCapsule() {
+      const msg = document.getElementById("capsuleMsg").value;
+      const date = document.getElementById("capsuleDate").value;
+      localStorage.setItem("capsule", JSON.stringify({ msg, date }));
+      showCapsule();
+    }
+
+    function showCapsule() {
+      const capsule = JSON.parse(localStorage.getItem("capsule") || "{}");
+      if (capsule.msg && capsule.date) {
+        const today = new Date().toISOString().split("T")[0];
+        if (today >= capsule.date) {
+          document.getElementById("capsuleResult").innerHTML = `<b>📬 Time Capsule:</b> ${capsule.msg}`;
+        } else {
+          document.getElementById("capsuleResult").innerText = `⏳ Message opens on ${capsule.date}`;
+        }
+      }
+    }
+
+    function randomCompliment() {
+      const compliments = [
+        "You sparkle harder than my highlighter!",
+        "You’re the reason glitter exists.",
+        "Your energy could power a city.",
+        "You're a walking serotonin booster.",
+        "Bestie status: Legendary 💅"
+      ];
+      const pick = compliments[Math.floor(Math.random() * compliments.length)];
+      document.getElementById("complimentText").innerText = pick;
+    }
+
+    function addBucket() {
+      const item = document.getElementById("bucketItem").value;
+      const list = JSON.parse(localStorage.getItem("bucket") || "[]");
+      list.push(item);
+      localStorage.setItem("bucket", JSON.stringify(list));
+      loadBucket();
+    }
+
+    function loadBucket() {
+      const list = JSON.parse(localStorage.getItem("bucket") || "[]");
+      document.getElementById("bucketList").innerHTML = list.map(i => `<li>${i}</li>`).join('');
+    }
+
+    function dailyQuote() {
+      const quotes = [
+        "True friends are never apart, maybe in distance but never in heart 💖",
+        "A best friend is like a four-leaf clover: hard to find and lucky to have 🍀",
+        "Friendship isn’t a big thing — it’s a million little things ✨",
+        "You're my favorite notification 💬💞",
+        "Some souls just understand each other upon meeting 💫"
+      ];
+      const pick = quotes[Math.floor(Math.random() * quotes.length)];
+      document.getElementById("dailyQuote").innerText = `"${pick}"`;
+    }
+  </script>
+</body>
+</html>
